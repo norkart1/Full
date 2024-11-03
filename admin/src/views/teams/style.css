@@ -1,0 +1,105 @@
+/* General Styles */
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #3d52a0;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+    text-align: left;
+  }
+  
+  .label {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #333;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    outline: none;
+  }
+  
+  .input:focus {
+    border-color: #3d52a0;
+  }
+  
+  .checkbox-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  
+  .checkbox-label {
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .checkbox {
+    margin-right: 8px;
+  }
+  
+  /* Button Styles */
+  .btn {
+    background-color: #3d52a0;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+  }
+  
+  .btn:hover {
+    background-color: #283b73;
+  }
+  
+  .btn.secondary {
+    background-color: #6c757d;
+    margin-top: 0;
+  }
+  
+  .btn.danger {
+    background-color: #dc3545;
+  }
+  
+  .btn.secondary:hover {
+    background-color: #565e64;
+  }
+  
+  .btn.danger:hover {
+    background-color: #c82333;
+  }
+  
+  .button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  /* Message Styles */
+  .message {
+    margin-top: 20px;
+    font-size: 16px;
+    color: green;
+  }
+  
