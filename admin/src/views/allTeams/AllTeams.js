@@ -23,10 +23,16 @@ function AllBrokers() {
   const [loading, setIsLoading] = useState(true)
   const [activePage, setActivePage] = useState(1) // State to manage the active page
   const itemsPerPage = 10 // Number of items per page
+  const [error,setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const fetchedData = await fetchTeamData()
+      try {
+        const fetchedData = await fetchTeamData()
+
+        if(!fetchedData){
+          throw new Error("Team data not available")
+        }
       
       const sortedTeams = fetchedData.sort((a, b) => b.totalScore - a.totalScore);
 
@@ -37,7 +43,13 @@ function AllBrokers() {
       }));
 
       setBrokers(rankedTeams)
-      setIsLoading(false) // Set isLoading to false after fetching data
+      
+      } catch (error) {
+        console.error("Error fetching team data:", err);
+        setError(error.message);
+      }finally{
+        setIsLoading(false) // Set isLoading to false after fetching data
+      }
     }
     fetchData()
   }, [fetchTeamData]) // Make sure to include fetchFranchises in the dependency array
@@ -51,7 +63,7 @@ function AllBrokers() {
   const startIndex = (activePage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
 
-  brokers.slice(startIndex, endIndex).map((x, y) => console.log(x))
+  
 
   return (
     <div>
@@ -91,7 +103,9 @@ function AllBrokers() {
                 </CTableRow>
               ))
             : // Render actual data once it's loaded
-              brokers.slice(startIndex, endIndex).map((item, index) => (
+              errro ? <div className="error-message">
+              <p>Failed to load data: {error}</p>
+            </div> : brokers.slice(startIndex, endIndex).map((item, index) => (
                 <CTableRow key={index}>
                   <CTableDataCell className="text-center">
                     <CAvatar size="md" src={`${imageUrl}/${item.image}`} />
