@@ -2,32 +2,10 @@ const path = require("path");
 const fs = require("fs");
 const Teams = require("../Model/teams");
 
-// Function to add a new team
-// const addTeam = async (teamData, teamImg, io) => {
-//   try {
-//     // Create a new instance of the Teams model with the provided data
-//     const newteam = new Teams({
-//       name: teamData.name,
-//       ranking: teamData.ranking,
-//       score: teamData.score,
-//       program: teamData.program,
-//       isSingle: teamData.isSingle,
-//       isGroup: teamData.isGroup,
-//       type: teamData.type,
-//       image: teamImg ? teamImg.filename : null,
-//     });
 
-//     // Save the new team to the database
-//     const savedteam = await newteam.save();
-//     io.emit("team_add");
-
-//     return savedteam;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
 
 const addTeam = async (name, image) => {
+  
   try {
     // Create a new team
     const newTeam = new Teams({

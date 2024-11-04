@@ -27,15 +27,29 @@ const Page = () => {
   const [brokersData, setBrokersData] = useState([])
 
   const [isLoading, setIsLoading] = useState(true)
+  const [error,setError]=useState(null)
 
   const [searchQuery, setSearchQuery] = useState('') // State to hold the search query
 
   useEffect(() => {
     const fetchData = async () => {
-      const fetchedData = await fetchTeamData()
+      try {
+        const fetchedData = await fetchTeamData()
+
+        if(!fetchData)
+        {
+          console.log("no data available")
+          throw new Error('no data available');
+        }
 
       setBrokersData(fetchedData)
-      setIsLoading(false) // Set isLoading to false after fetching data
+      
+      } catch (error) {
+        console.error("Error fetching team data:", err);
+        setError(error.message);
+      }finally{
+        setIsLoading(false) // Set isLoading to false after fetching data
+      }
     }
     fetchData()
   }, [fetchTeamData]) // Make sure to include fetchFranchises in the dependency array
@@ -45,14 +59,14 @@ const Page = () => {
     broker.name?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const totalBrokers = filteredBrokers.length
+  const totalBrokers = filteredBrokers?.length || 0;
   const totalPages = Math.ceil(totalBrokers / rowsPerPage)
 
   // Calculate displayed Brokers based on pagination
   const startIndex = page * rowsPerPage
   const endIndex = Math.min(startIndex + rowsPerPage, totalBrokers)
 
-  const displayedBrokers = filteredBrokers.slice(startIndex, endIndex)
+  const displayedBrokers = filteredBrokers?.slice(startIndex, endIndex)
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage - 1)
@@ -110,11 +124,13 @@ const Page = () => {
                     </Grid>
                   ))
                 : // Render actual data once it's loaded
-                  displayedBrokers.map((broker) => (
-                    <Grid xs={12} md={6} lg={4} key={broker._id}>
-                      <TeamCard broker={broker} />
-                    </Grid>
-                  ))}
+                 error ? <div className="error-message">
+                 <p>Failed to load data: {error}</p>
+               </div> :  displayedBrokers?.map((broker) => (
+                  <Grid xs={12} md={6} lg={4} key={broker._id}>
+                    <TeamCard broker={broker} />
+                  </Grid>
+                ))}
             </Grid>
             <Box
               sx={{

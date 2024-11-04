@@ -23,10 +23,14 @@ import { CrudProgramContext } from '../../Context/programContext'
 
 const AddBrokerForm = ({ open, setOpen }) => {
   const { addTeam } = useContext(CrudTeamContext)
-  const { fetchPrograms } = useContext(CrudProgramContext)
+  // const { fetchPrograms } = useContext(CrudProgramContext)
 
   const [imagePreview, setImagePreview] = useState(null)
   const [nameError, setNameError] = useState('')
+
+  // const [loading,setLoading] = useState(true);
+  // const [error,setError] = useState(null)
+  
 
   const [formData, setFormData] = useState({
     name: '',
@@ -34,15 +38,28 @@ const AddBrokerForm = ({ open, setOpen }) => {
     imagePreviewUrl: '',
   })
 
-  const [allPrograms, setAllPrograms] = useState([])
+  // const [allPrograms, setAllPrograms] = useState([])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const fetchedData = await fetchPrograms()
-      setAllPrograms(fetchedData)
-    }
-    fetchData()
-  }, [fetchPrograms])
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         const fetchedData = await fetchPrograms()
+      
+//         if (!fetchedData) {
+//           throw new Error("No data available");
+//         }
+
+//         setAllPrograms(fetchedData)
+        
+//       } catch (error) {
+//         console.error("Error fetching team data:", err);
+//         setError(error.message);
+//       }finally{
+// setLoading(false)
+//       }
+//     }
+//     fetchData()
+//   }, [fetchPrograms])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -174,87 +191,7 @@ const AddBrokerForm = ({ open, setOpen }) => {
                 </Typography>
               </Grid>
 
-              {/* <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Ranking"
-                  name="ranking"
-                  variant="outlined"
-                  margin="normal"
-                  value={formData.ranking}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  type="tel"
-                />
-                <Typography color="error" variant="body2">
-                  {rankingError}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Score"
-                  name="score"
-                  variant="outlined"
-                  margin="normal"
-                  type="text"
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                />
-                <Typography color="error" variant="body2">
-                  {scoreError}
-                </Typography>
-              </Grid> */}
-
-              {/* Select dropdown for programs */}
-              {/* <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel id="program-select-label">Program</InputLabel>
-                  <Select
-                    labelId="program-select-label"
-                    id="program-select"
-                    value={formData.program || ''}
-                    label="Program"
-                    onChange={(e) => setFormData({ ...formData, program: e.target.value })}
-                  >
-                    {allPrograms.map((program) => (
-                      <MenuItem key={program.value} value={program.value}>
-                        {program.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid> */}
-
-              {/* Checkboxes for Single/Group */}
-              {/* <Grid item xs={12}>
-                <FormControl component="fieldset">
-                  <FormLabel component="legend">Category</FormLabel>
-                  <FormGroup row>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.isSingle}
-                          onChange={(e) => setFormData({ ...formData, isSingle: e.target.checked })}
-                          name="isSingle"
-                        />
-                      }
-                      label="Single"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.isGroup}
-                          onChange={(e) => setFormData({ ...formData, isGroup: e.target.checked })}
-                          name="isGroup"
-                        />
-                      }
-                      label="Group"
-                    />
-                  </FormGroup>
-                </FormControl>
-              </Grid> */}
+               
 
               {/* Image Upload */}
               <Grid item xs={12}>

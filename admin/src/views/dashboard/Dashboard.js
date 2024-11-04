@@ -55,10 +55,16 @@ const Dashboard = () => {
   const { fetchTeamData } = useContext(CrudTeamContext);
   const [teams, setTeams] = useState([]);
   const [loading, setIsLoading] = useState(true);
+  const [error, setError]=useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
-      const fetchedData = await fetchTeamData();
+      try {
+        const fetchedData = await fetchTeamData();
+
+        if (!fetchedData) {
+          throw new Error("No data available");
+        }
 
       // Sort teams based on total score in descending order
       const sortedTeams = fetchedData.sort((a, b) => b.totalScore - a.totalScore);
@@ -70,7 +76,13 @@ const Dashboard = () => {
       }));
 
       setTeams(rankedTeams);
-      setIsLoading(false); // Set isLoading to false after fetching data
+      
+      } catch (error) {
+        console.error("Error fetching team data:", err);
+        setError(error.message);
+      }finally{
+        setIsLoading(false); // Set isLoading to false after fetching data
+      }
     };
     fetchData();
   }, [fetchTeamData]);
@@ -119,7 +131,9 @@ const Dashboard = () => {
                         </CTableRow>
                       ))
                     : // Render actual data once it's loaded
-                      teams.slice(0, 10).map((item, index) => (
+                      error?<div className="error-message">
+                      <p>Failed to load data: {error}</p>
+                    </div>: teams.slice(0, 10).map((item, index) => (
                         <CTableRow key={index}>
                           <CTableDataCell>{item._id}</CTableDataCell>
                           <CTableDataCell className="text-center">

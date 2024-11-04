@@ -9,9 +9,11 @@ export const CrudProvider = ({ children }) => {
 
   // Add a new team without program association
   const addTeam = async (teamData) => {
-    console.log('working')
+    
     try {
       const response = await axios.post(`${teamBaseUrl}/addteam`, teamData)
+
+      console.log('response',response);
 
       if (response.status === 200) {
         const newTeam = response.data

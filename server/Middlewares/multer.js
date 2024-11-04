@@ -13,7 +13,6 @@ const storage = multer.diskStorage({
     }
 
     if (file.fieldname.startsWith("image")) {
-      console.log("Setting destination to teamImg folder");
       cb(null, pathx);
     } else {
       console.log("Invalid fieldname");
