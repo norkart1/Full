@@ -13,8 +13,6 @@ export const CrudProvider = ({ children }) => {
     try {
       const response = await axios.post(`${teamBaseUrl}/addteam`, teamData)
 
-      console.log('response',response);
-
       if (response.status === 200) {
         const newTeam = response.data
         setTeams((prevTeams) => [...prevTeams, newTeam])

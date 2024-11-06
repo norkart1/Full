@@ -45,7 +45,7 @@ const AddTeamToProgram = () => {
     if (teamId === '' || programId === '') {
       Swal.fire({
         title: 'Error!',
-        text: 'Please select TeamId & ProgramId.',
+        text: 'Please select Team & Program.',
         icon: 'error',
         confirmButtonText: 'OK',
       })
@@ -83,35 +83,7 @@ const AddTeamToProgram = () => {
       isGroup,
     }
 
-    // try {
-    //   const response = await axios.post(`${teamBaseUrl}/addTeamToProgram`, payload)
-
-    //   // If successful, show success alert
-    //   Swal.fire({
-    //     title: 'Success!',
-    //     text: 'Team added to program successfully!',
-    //     icon: 'success',
-    //     confirmButtonText: 'OK',
-    //   })
-
-    //   setMessage(response.data.message)
-    //   setScore('')
-    //   setIsGroup(false)
-    //   setIsSingle(false)
-    //   setScore('')
-    //   setRank('')
-    // } catch (error) {
-    //   console.error('Error adding team to program:', error)
-    //   setMessage('Error adding team to program.')
-
-    //   // If error occurs, show error alert
-    //   Swal.fire({
-    //     title: 'Error!',
-    //     text: 'There was a problem adding the team to the program.',
-    //     icon: 'error',
-    //     confirmButtonText: 'OK',
-    //   })
-    // }
+     
 
     try {
       if (isEditMode) {
@@ -313,7 +285,7 @@ const AddTeamToProgram = () => {
             type="number"
             value={rank}
             onChange={(e) => setRank(e.target.value)}
-            required
+            
             min="0"
             className="input"
           />

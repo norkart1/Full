@@ -36,7 +36,7 @@ const Page = () => {
       try {
         const fetchedData = await fetchTeamData()
 
-        if(!fetchData)
+        if(fetchData === '')
         {
           console.log("no data available")
           throw new Error('no data available');

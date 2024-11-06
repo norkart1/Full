@@ -30,7 +30,7 @@ function AllBrokers() {
       try {
         const fetchedData = await fetchTeamData()
 
-        if(!fetchedData){
+        if(fetchData === ''){
           throw new Error("Team data not available")
         }
       
@@ -103,7 +103,7 @@ function AllBrokers() {
                 </CTableRow>
               ))
             : // Render actual data once it's loaded
-              errro ? <div className="error-message">
+              error ? <div className="error-message">
               <p>Failed to load data: {error}</p>
             </div> : brokers.slice(startIndex, endIndex).map((item, index) => (
                 <CTableRow key={index}>

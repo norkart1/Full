@@ -15,8 +15,15 @@ const ProgramManagement = () => {
   // Fetch programs on component mount
   useEffect(() => {
     fetchPrograms()
-      .then((data) => setAllPrograms(data))
-      .catch((error) => console.error('Error fetching programs:', error))
+      .then((data) => {
+        if(data == '')
+        {
+        throw new Error('program not found');
+        }
+        console.log('data',data)
+        setAllPrograms(data)
+      })
+      .catch((error) => console.error('Error fetching programs OR :', error))
   }, [fetchPrograms])
 
   // Function to add a new program
