@@ -66,34 +66,35 @@ module.exports = {
           .json({ message: "Team has already participated in this program." });
       }
   
-      // Add the team to the program with the score (without the rank for now)
-      team.programs.push({ programId, score, rank: null, isSingle, isGroup });
-      program.teams.push({ teamId, score, rank: null, isSingle, isGroup });
+      // Calculate the rank based on the existing teams in the program
+      const allTeamsInProgram = [...program.teams, { teamId, score }];
+      allTeamsInProgram.sort((a, b) => b.score - a.score); // Sort by score descending
+  
+      // Determine the rank of the current team
+      const newRank = allTeamsInProgram.findIndex(
+        (t) => t.teamId.toString() === teamId
+      ) + 1;
+  
+      // Add the team to the program with the calculated rank
+      team.programs.push({ programId, score, rank: newRank, isSingle, isGroup });
+      program.teams.push({ teamId, score, rank: newRank, isSingle, isGroup });
   
       // Update the total score of the team
       team.totalScore += score;
   
-      // Save the team and program initially
-      await team.save();
-      await program.save();
-  
-      // Re-fetch all the teams in the program to calculate ranks
-      const allTeamsInProgram = program.teams;
-
-      console.log('before',allTeamsInProgram)
-  
-      // Sort teams by score in descending order and assign ranks
-      allTeamsInProgram.sort((a, b) => b.score - a.score); // Sort by score descending
-
-      console.log('after',allTeamsInProgram)
-  
-      // Update ranks for each team in the program
+      // Update ranks for all teams in the program
       for (let rank = 0; rank < allTeamsInProgram.length; rank++) {
         const teamInProgram = allTeamsInProgram[rank];
-        teamInProgram.rank = rank + 1;  // Rank starts from 1
+        const programTeam = program.teams.find(
+          (t) => t.teamId.toString() === teamInProgram.teamId.toString()
+        );
+        if (programTeam) {
+          programTeam.rank = rank + 1;
+        }
       }
   
-      // Save the updated program after assigning ranks
+      // Save the team and program
+      await team.save();
       await program.save();
   
       res.status(200).json({ message: "Team added to program successfully!" });
@@ -102,6 +103,7 @@ module.exports = {
       res.status(500).json({ message: "Error adding team to program." });
     }
   },
+  
   
 
   editTeamInProgram: async (req, res) => {

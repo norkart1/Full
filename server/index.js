@@ -13,14 +13,6 @@ require("dotenv").config();
 const app = express();
 const server = createServer(app);
 
-// const io = new Server(server, {
-//   cors: {
-//     origin: [
-//       "http://localhost:3001",
-//       "http://localhost:3000",
-//     ],
-//   },
-// });
 
 const io = new Server(server, {
   cors: {
@@ -62,7 +54,7 @@ const PORT = process.env.PORT || 5000;
 
 mongoose
   .connect(process.env.MONGO_URL, {
-    dbName: "COLLEGE-FEST2024",
+    dbName: "SARGALAYAM-2024",
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })

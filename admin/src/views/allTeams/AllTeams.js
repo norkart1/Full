@@ -18,42 +18,42 @@ import 'react-loading-skeleton/dist/skeleton.css'
 import { imageUrl } from '../../Constant/url'
 
 function AllBrokers() {
-  const { fetchTeamData } = useContext(CrudTeamContext)
-  const [brokers, setBrokers] = useState([])
-  const [loading, setIsLoading] = useState(true)
-  const [activePage, setActivePage] = useState(1) // State to manage the active page
-  const itemsPerPage = 10 // Number of items per page
-  const [error,setError] = useState(null);
+  const { fetchTeamData } = useContext(CrudTeamContext);
+  const [brokers, setBrokers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activePage, setActivePage] = useState(1) // State to manage 
+  const [error, setError] = useState(null);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const fetchedData = await fetchTeamData()
+        const fetchedData = await fetchTeamData();
 
-        if(fetchData === '' ||  fetchData.length === 0){
-          setBrokers([]);
-          return;
+        if (!fetchedData || fetchedData.length === 0) {
+          setBrokers([]); // Handle empty data case
+        } else {
+          const sortedTeams = fetchedData.sort((a, b) => b.totalScore - a.totalScore);
+
+          // Assign ranking based on the sorted order
+          const rankedTeams = sortedTeams.map((team, index) => ({
+            ...team,
+            ranking: index + 1, // Assign rank based on position
+          }));
+
+          setBrokers(rankedTeams); // Update brokers with sorted and ranked data
         }
-      
-      const sortedTeams = fetchedData.sort((a, b) => b.totalScore - a.totalScore);
-
-      // Assign ranking based on the sorted order
-      const rankedTeams = sortedTeams.map((team, index) => ({
-        ...team,
-        ranking: index + 1, // Assign rank based on position
-      }));
-
-      setBrokers(rankedTeams)
-      
-      } catch (error) {
+      } catch (err) {
         console.error("Error fetching team data:", err);
-        setError(error.message);
-      }finally{
-        setIsLoading(false) // Set isLoading to false after fetching data
+        setError("Failed to load data. Please try again later."); // Set error message if fetching fails
+      } finally {
+        setLoading(false); // Set loading to false after fetch completes, regardless of success or error
       }
-    }
-    fetchData()
-  }, [fetchTeamData]) // Make sure to include fetchFranchises in the dependency array
+    };
+
+    fetchData();
+  }, [fetchTeamData]);
+
 
   // Function to handle page change
   const handlePageChange = (pageNumber) => {
@@ -80,58 +80,58 @@ function AllBrokers() {
     </CTableRow>
   </CTableHead>
   <CTableBody>
-    {loading ? (
-      // Render skeleton rows while data is being fetched
-      Array.from({ length: 5 }).map((_, index) => (
-        <CTableRow key={index}>
-          <CTableDataCell className="text-center">
-            <Skeleton circle={true} height={40} width={40} />
-          </CTableDataCell>
-          <CTableDataCell>
-            <Skeleton height={20} />
-          </CTableDataCell>
-          <CTableDataCell className="text-center">
-            <Skeleton height={20} />
-          </CTableDataCell>
-          <CTableDataCell className="text-center">
-            <Skeleton height={20} />
-          </CTableDataCell>
-        </CTableRow>
-      ))
-    ) : brokers.length === 0 ? (
-      // Render "No Data Available" message when brokers is empty
-      <CTableRow>
-        <CTableDataCell colSpan={4} className="text-center py-5">
-          <h1 className="text-2xl font-bold text-gray-700 mb-2">No Data Available</h1>
-          <p className="text-gray-500">
-            We couldn’t find any team data to display. Please check back later or try refreshing the page.
-          </p>
-        </CTableDataCell>
-      </CTableRow>
-    ) : (
-      // Render actual data once it's loaded
-      brokers.slice(startIndex, endIndex).map((item, index) => (
-        <CTableRow key={index}>
-          <CTableDataCell className="text-center">
-            <CAvatar size="md" src={`${imageUrl}/${item.image}`} />
-          </CTableDataCell>
-          <CTableDataCell>{item.name}</CTableDataCell>
-          <CTableDataCell className="text-center">
-            <div className="fw-semibold">{item.ranking}</div>
-          </CTableDataCell>
-          <CTableDataCell className="text-center">
-            <div className="fw-semibold">{item.totalScore}</div>
+  {loading ? (
+        // Loading State: Display skeleton loaders
+        Array.from({ length: 5 }).map((_, index) => (
+          <CTableRow key={index}>
+            <CTableDataCell className="text-center">
+              <Skeleton circle={true} height={40} width={40} />
+            </CTableDataCell>
+            <CTableDataCell>
+              <Skeleton height={20} />
+            </CTableDataCell>
+            <CTableDataCell className="text-center">
+              <Skeleton height={20} />
+            </CTableDataCell>
+            <CTableDataCell className="text-center">
+              <Skeleton height={20} />
+            </CTableDataCell>
+          </CTableRow>
+        ))
+      ) : error ? (
+        // Error State: Display error message
+        <CTableRow>
+          <CTableDataCell colSpan={4} className="text-center text-red-500 py-3">
+            <p>{error}</p>
           </CTableDataCell>
         </CTableRow>
-      ))
-    )}
-    {error && (
-      <CTableRow>
-        <CTableDataCell colSpan={4} className="text-center text-red-500 py-3">
-          <p>Failed to load data: {error}</p>
-        </CTableDataCell>
-      </CTableRow>
-    )}
+      ) : brokers.length === 0 ? (
+        // Empty Data State: Display "No Data Available" message
+        <CTableRow>
+          <CTableDataCell colSpan={4} className="text-center py-5">
+            <h1 className="text-2xl font-bold text-gray-700 mb-2">No Data Available</h1>
+            <p className="text-gray-500">
+              We couldn’t find any team data to display. Please check back later or try refreshing the page.
+            </p>
+          </CTableDataCell>
+        </CTableRow>
+      ) : (
+        // Data Display State: Display the actual data
+        brokers.slice((activePage - 1) * itemsPerPage, activePage * itemsPerPage).map((item, index) => (
+          <CTableRow key={index}>
+            <CTableDataCell className="text-center">
+              <CAvatar size="md" src={`${imageUrl}/${item.image}`} />
+            </CTableDataCell>
+            <CTableDataCell>{item.name}</CTableDataCell>
+            <CTableDataCell className="text-center">
+              <div className="fw-semibold">{item.ranking}</div>
+            </CTableDataCell>
+            <CTableDataCell className="text-center">
+              <div className="fw-semibold">{item.totalScore}</div>
+            </CTableDataCell>
+          </CTableRow>
+        ))
+      )}
   </CTableBody>
 </CTable>
 

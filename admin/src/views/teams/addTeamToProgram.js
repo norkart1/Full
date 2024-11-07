@@ -5,6 +5,7 @@ import Swal from 'sweetalert2'
 import './style.css'
 
 const AddTeamToProgram = () => {
+  const[error,setError] = useState(null);
   const [teams, setTeams] = useState([])
   const [programs, setPrograms] = useState([])
   const [selectedTeam, setSelectedTeam] = useState('')
@@ -33,9 +34,13 @@ const AddTeamToProgram = () => {
         setTeams([]);
         return;
       }
-      setTeams(response.data)
+      else{
+        setTeams(response.data)
+      }
+      
     } catch (error) {
-      console.error('Error fetching teams:', error)
+      console.error("Error fetching team data:", err);
+      setError("Failed to load data. Please try again later."); // Set error message if fetching fails
     }finally{
       setLoading(false);
     }
@@ -49,10 +54,13 @@ const AddTeamToProgram = () => {
         {
           setPrograms([]);
           return;
+        }else{
+          setPrograms(response.data)
         }
-      setPrograms(response.data)
+      
     } catch (error) {
-      console.error('Error fetching programs:', error)
+      console.error("Error fetching team data:", err);
+      setError("Failed to load data. Please try again later."); // Set error message if fetching fails
     }finally{
       setLoading(false);
     }
@@ -95,12 +103,21 @@ const AddTeamToProgram = () => {
       teamId: selectedTeam,
       programId: selectedProgram,
       score: parseFloat(score), // Allows both integers and floats
-      //rank: parseInt(rank), // Keeps rank as an integer
+       
       isSingle,
       isGroup,
     }
 
-     
+    if(!isSingle || !isGroup)
+    {
+      Swal.fire({
+        title: 'Error!',
+        text: 'Please confirm single or group.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      })
+      return
+    }
 
     try {
       if (isEditMode) {
@@ -144,7 +161,7 @@ const AddTeamToProgram = () => {
     if (selectedTeam === '' || selectedProgram === '') {
       Swal.fire({
         title: 'Error!',
-        text: 'Please select TeamId & ProgramId.',
+        text: 'Please select Team & Program.',
         icon: 'error',
         confirmButtonText: 'OK',
       })
@@ -187,16 +204,16 @@ const AddTeamToProgram = () => {
     setMessage('')
   }
 
-  if(teams.length === 0 || programs.length === 0)
-  {
-      Swal.fire({
-        title: 'Error!',
-        text: 'Cannot find any teams.',
-        icon: 'warning',
-        confirmButtonText: 'OK',
-      })
-  }
-
+  // useEffect(() => {
+  //   if (!loading && (teams.length === 0 || programs.length === 0)) {
+  //     Swal.fire({
+  //       title: 'Warning!',
+  //       text: 'Cannot find any teams. Please try to add a team or check back later.',
+  //       icon: 'warning',
+  //       confirmButtonText: 'OK',
+  //     });
+  //   }
+  // }, [loading, teams, programs]);
     
 
   return (
@@ -271,41 +288,37 @@ const AddTeamToProgram = () => {
           />
         </div>
 
-        {/* <div className="form-group">
-          <label className="label">Rank</label>
-          <input
-            type="number"
-            value={rank}
-            onChange={(e) => setRank(e.target.value)}
-            
-            min="0"
-            className="input"
-          />
-        </div> */}
-
+       
         <div className="form-group">
-          <label className="label">Team Type</label>
-          <div className="checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={isSingle}
-                onChange={(e) => setIsSingle(e.target.checked)}
-                className="checkbox"
-              />
-              Is Single
-            </label>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={isGroup}
-                onChange={(e) => setIsGroup(e.target.checked)}
-                className="checkbox"
-              />
-              Is Group
-            </label>
-          </div>
-        </div>
+  <label className="label">Team Type</label>
+  <div className="checkbox-group">
+    <label className="checkbox-label">
+      <input
+        type="checkbox"
+        checked={isSingle}
+        onChange={(e) => {
+          setIsSingle(e.target.checked);
+          if (e.target.checked) setIsGroup(false); // Uncheck the other checkbox
+        }}
+        className="checkbox"
+      />
+      Is Single
+    </label>
+    <label className="checkbox-label">
+      <input
+        type="checkbox"  
+        checked={isGroup}
+        onChange={(e) => {
+          setIsGroup(e.target.checked);
+          if (e.target.checked) setIsSingle(false); // Uncheck the other checkbox
+        }}
+        className="checkbox"
+      />
+      Is Group
+    </label>
+  </div>
+</div>
+
 
         <button type="submit" className="btn">
           Submit
@@ -323,8 +336,6 @@ const AddTeamToProgram = () => {
           Delete Team from Program
         </button>
       </div>
-
-      {message && <p className="message">{message}</p>}
     </div>
   )
 }

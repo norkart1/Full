@@ -111,12 +111,10 @@ const AddBrokerForm = ({ open, setOpen }) => {
     e.preventDefault()
 
     const isNameValid = validateName(formData.name)
-    // const isRankingValid = validateRanking(formData.ranking)
-
-    // const isScoreValid = validateScore(formData.score)
+     
 
     if (!isNameValid || formData.image === null) {
-      alert('Image not found');
+      alert('Please add an Image');
       return
     }
 
