@@ -45,56 +45,77 @@ module.exports = {
 
   addTeamToProgram: async (req, res) => {
     try {
-      const { teamId, programId, score, rank, isSingle, isGroup } = req.body;
-
+      const { teamId, programId, score, isSingle, isGroup } = req.body;
+  
       // Find team and program by their IDs
       const team = await Teams.findById(teamId);
       const program = await Program.findById(programId);
-
+  
       if (!team || !program) {
         return res.status(404).json({ message: "Team or Program not found." });
       }
-
+  
       // Check if the team already participated in the program
       const existingParticipation = team.programs.find(
         (p) => p.programId.toString() === programId
       );
-
+  
       if (existingParticipation) {
         return res
           .status(400)
           .json({ message: "Team has already participated in this program." });
       }
-
-      // Add the team to the program with a score
-      team.programs.push({ programId, score, rank, isSingle, isGroup });
-      program.teams.push({ teamId, score, rank, isSingle, isGroup });
-
+  
+      // Add the team to the program with the score (without the rank for now)
+      team.programs.push({ programId, score, rank: null, isSingle, isGroup });
+      program.teams.push({ teamId, score, rank: null, isSingle, isGroup });
+  
       // Update the total score of the team
       team.totalScore += score;
-
+  
+      // Save the team and program initially
       await team.save();
       await program.save();
+  
+      // Re-fetch all the teams in the program to calculate ranks
+      const allTeamsInProgram = program.teams;
 
+      console.log('before',allTeamsInProgram)
+  
+      // Sort teams by score in descending order and assign ranks
+      allTeamsInProgram.sort((a, b) => b.score - a.score); // Sort by score descending
+
+      console.log('after',allTeamsInProgram)
+  
+      // Update ranks for each team in the program
+      for (let rank = 0; rank < allTeamsInProgram.length; rank++) {
+        const teamInProgram = allTeamsInProgram[rank];
+        teamInProgram.rank = rank + 1;  // Rank starts from 1
+      }
+  
+      // Save the updated program after assigning ranks
+      await program.save();
+  
       res.status(200).json({ message: "Team added to program successfully!" });
     } catch (error) {
       console.error("Error adding team to program:", error);
       res.status(500).json({ message: "Error adding team to program." });
     }
   },
+  
 
   editTeamInProgram: async (req, res) => {
     try {
-      const { teamId, programId, score, rank, isSingle, isGroup } = req.body;
-
-      // Find the team by its ID
+      const { teamId, programId, score, isSingle, isGroup } = req.body;
+  
+      // Find the team and program by their IDs
       const team = await Teams.findById(teamId);
       const program = await Program.findById(programId);
-
+  
       if (!team || !program) {
         return res.status(404).json({ message: "Team or Program not found." });
       }
-
+  
       // Check if the team has already participated in the program
       const teamParticipation = team.programs.find(
         (p) => p.programId.toString() === programId
@@ -102,31 +123,44 @@ module.exports = {
       const programParticipation = program.teams.find(
         (t) => t.teamId.toString() === teamId
       );
-
+  
       if (!teamParticipation || !programParticipation) {
         return res
           .status(404)
           .json({ message: "Team is not part of this program." });
       }
-
+  
       // Adjust the totalScore of the team by subtracting the old score and adding the new one
       team.totalScore = team.totalScore - teamParticipation.score + score;
-
-      // Update the score, rank, and other details in both the team and program
+  
+      // Update the score and other details for the team in the program
       teamParticipation.score = score;
-      teamParticipation.rank = rank;
       teamParticipation.isSingle = isSingle;
       teamParticipation.isGroup = isGroup;
-
+  
       programParticipation.score = score;
-      programParticipation.rank = rank;
       programParticipation.isSingle = isSingle;
       programParticipation.isGroup = isGroup;
-
-      // Save the changes
+  
+      // Save the updated team and program
       await team.save();
       await program.save();
-
+  
+      // Recalculate the ranks for the program after the update
+      const allTeamsInProgram = program.teams;
+  
+      // Sort teams by score in descending order and assign ranks
+      allTeamsInProgram.sort((a, b) => b.score - a.score); // Sort by score descending
+  
+      // Update ranks for each team in the program
+      for (let rank = 0; rank < allTeamsInProgram.length; rank++) {
+        const teamInProgram = allTeamsInProgram[rank];
+        teamInProgram.rank = rank + 1;  // Rank starts from 1
+      }
+  
+      // Save the updated program after assigning ranks
+      await program.save();
+  
       res.status(200).json({
         message: "Team's details in the program updated successfully!",
       });
@@ -134,7 +168,7 @@ module.exports = {
       console.error("Error editing team in program:", error);
       res.status(500).json({ message: "Error editing team in program." });
     }
-  },
+  },  
 
   deleteTeamFromProgram: async (req, res) => {
     try {
@@ -188,27 +222,21 @@ module.exports = {
 
   getTeamProgramDetail: async (req, res) => {
     const { teamId, programId } = req.query; // Get teamId and programId from the query params
-
-    console.log("req.q", req.query);
-    console.log("team id", teamId);
-    console.log("programId", programId);
-
+  
     try {
       // Find the program by programId and look for the team in the teams array using dot notation
       const program = await Program.findOne(
         { _id: programId, "teams.teamId": teamId },
         { "teams.$": 1 } // Only return the matched team inside the teams array
       );
-
-      console.log("pr", program);
-
+  
       // If no matching program or team is found, return a 404 error
       if (!program || program.teams.length === 0) {
         return res
           .status(404)
           .json({ message: "Team not found in the program" });
       }
-
+  
       // Return the found team's details
       const teamProgram = program.teams[0]; // Since we use "teams.$", only the matched team is returned in the array
       return res.status(200).json(teamProgram);
@@ -218,7 +246,7 @@ module.exports = {
         .status(500)
         .json({ message: "Server error. Please try again later." });
     }
-  },
+  },  
 
   getAllPrograms: async (req, res) => {
     try {

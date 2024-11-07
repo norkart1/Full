@@ -30,8 +30,9 @@ function AllBrokers() {
       try {
         const fetchedData = await fetchTeamData()
 
-        if(fetchData === ''){
-          throw new Error("Team data not available")
+        if(fetchData === '' ||  fetchData.length === 0){
+          setBrokers([]);
+          return;
         }
       
       const sortedTeams = fetchedData.sort((a, b) => b.totalScore - a.totalScore);
@@ -68,66 +69,72 @@ function AllBrokers() {
   return (
     <div>
       <CTable align="middle" className="mb-0 border" hover responsive>
-        <CTableHead className="text-nowrap">
-          <CTableRow>
-            <CTableHeaderCell className="bg-body-tertiary text-center">
-              <CIcon icon={cibSuperuser} />
-            </CTableHeaderCell>
-            <CTableHeaderCell className="bg-body-tertiary">Team Name</CTableHeaderCell>
-            {/* <CTableHeaderCell className="bg-body-tertiary text-center">Country</CTableHeaderCell> */}
-            <CTableHeaderCell className="bg-body-tertiary text-center">Rank</CTableHeaderCell>
-            <CTableHeaderCell className="bg-body-tertiary text-center">Score</CTableHeaderCell>
-            {/* <CTableHeaderCell className="bg-body-tertiary text-center">Link</CTableHeaderCell> */}
-          </CTableRow>
-        </CTableHead>
-        <CTableBody>
-          {loading
-            ? // Render skeleton rows while data is being fetched
-              Array.from({ length: 5 }).map((_, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell className="text-center">
-                    <Skeleton circle={true} height={40} width={40} />
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <Skeleton height={20} />
-                  </CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    <Skeleton height={20} />
-                  </CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    <Skeleton height={20} />
-                  </CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    <Skeleton height={20} />
-                  </CTableDataCell>
-                </CTableRow>
-              ))
-            : // Render actual data once it's loaded
-              error ? <div className="error-message">
-              <p>Failed to load data: {error}</p>
-            </div> : brokers.slice(startIndex, endIndex).map((item, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell className="text-center">
-                    <CAvatar size="md" src={`${imageUrl}/${item.image}`} />
-                  </CTableDataCell>
-                  <CTableDataCell>{item.name}</CTableDataCell>
-                  
-                  <CTableDataCell className="text-center">
-                    <div className="fw-semibold">{item.ranking}</div>
-                  </CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    <div className="fw-semibold">{item.totalScore}</div>
-                  </CTableDataCell>
-                  {/* <CTableDataCell className="text-center">
-                  
-                  <a href={item.link} target="_blank" rel="noopener noreferrer">
-                    {item.link}
-                  </a>
-                </CTableDataCell> */}
-                </CTableRow>
-              ))}
-        </CTableBody>
-      </CTable>
+  <CTableHead className="text-nowrap">
+    <CTableRow>
+      <CTableHeaderCell className="bg-body-tertiary text-center">
+        <CIcon icon={cibSuperuser} />
+      </CTableHeaderCell>
+      <CTableHeaderCell className="bg-body-tertiary">Team Name</CTableHeaderCell>
+      <CTableHeaderCell className="bg-body-tertiary text-center">Rank</CTableHeaderCell>
+      <CTableHeaderCell className="bg-body-tertiary text-center">Score</CTableHeaderCell>
+    </CTableRow>
+  </CTableHead>
+  <CTableBody>
+    {loading ? (
+      // Render skeleton rows while data is being fetched
+      Array.from({ length: 5 }).map((_, index) => (
+        <CTableRow key={index}>
+          <CTableDataCell className="text-center">
+            <Skeleton circle={true} height={40} width={40} />
+          </CTableDataCell>
+          <CTableDataCell>
+            <Skeleton height={20} />
+          </CTableDataCell>
+          <CTableDataCell className="text-center">
+            <Skeleton height={20} />
+          </CTableDataCell>
+          <CTableDataCell className="text-center">
+            <Skeleton height={20} />
+          </CTableDataCell>
+        </CTableRow>
+      ))
+    ) : brokers.length === 0 ? (
+      // Render "No Data Available" message when brokers is empty
+      <CTableRow>
+        <CTableDataCell colSpan={4} className="text-center py-5">
+          <h1 className="text-2xl font-bold text-gray-700 mb-2">No Data Available</h1>
+          <p className="text-gray-500">
+            We couldn’t find any team data to display. Please check back later or try refreshing the page.
+          </p>
+        </CTableDataCell>
+      </CTableRow>
+    ) : (
+      // Render actual data once it's loaded
+      brokers.slice(startIndex, endIndex).map((item, index) => (
+        <CTableRow key={index}>
+          <CTableDataCell className="text-center">
+            <CAvatar size="md" src={`${imageUrl}/${item.image}`} />
+          </CTableDataCell>
+          <CTableDataCell>{item.name}</CTableDataCell>
+          <CTableDataCell className="text-center">
+            <div className="fw-semibold">{item.ranking}</div>
+          </CTableDataCell>
+          <CTableDataCell className="text-center">
+            <div className="fw-semibold">{item.totalScore}</div>
+          </CTableDataCell>
+        </CTableRow>
+      ))
+    )}
+    {error && (
+      <CTableRow>
+        <CTableDataCell colSpan={4} className="text-center text-red-500 py-3">
+          <p>Failed to load data: {error}</p>
+        </CTableDataCell>
+      </CTableRow>
+    )}
+  </CTableBody>
+</CTable>
+
       {/* Pagination */}
       <div className="d-flex justify-content-center mt-3">
         <Pagination
