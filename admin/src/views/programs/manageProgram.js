@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react'
 import { CrudProgramContext } from '../../Context/programContext'
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
+import Swal from 'sweetalert2'
 
 const ProgramManagement = () => {
   const { createProgram, fetchPrograms, deleteProgramById } = useContext(CrudProgramContext)
@@ -50,7 +51,17 @@ const ProgramManagement = () => {
 
   // Function to delete a program
   const handleDeleteProgram = (programId) => {
-    deleteProgramById(programId)
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteProgramById(programId)
       .then(() => {
         setAlertMessage('Program deleted successfully!')
         setOpenSnackbar(true)
@@ -60,6 +71,14 @@ const ProgramManagement = () => {
         setAlertMessage('Failed to delete program.')
         setOpenSnackbar(true)
       })
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+      }
+    });
+    
   }
 
   // Filter programs based on search term
