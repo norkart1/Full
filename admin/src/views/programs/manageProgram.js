@@ -2,7 +2,9 @@ import React, { useState, useContext, useEffect } from 'react'
 import { CrudProgramContext } from '../../Context/programContext'
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
+import CircularProgress from '@mui/material/CircularProgress'
 import Swal from 'sweetalert2'
+import Typography from '@mui/material/Typography'
 
 const ProgramManagement = () => {
   const { createProgram, fetchPrograms, deleteProgramById } = useContext(CrudProgramContext)
@@ -12,19 +14,32 @@ const ProgramManagement = () => {
   const [allPrograms, setAllPrograms] = useState([]) // State for storing all fetched programs
   const [openSnackbar, setOpenSnackbar] = useState(false) // Snackbar state
   const [alertMessage, setAlertMessage] = useState('') // Snackbar alert message
+  const [loading,setLoading] = useState(true);
+  const [error,setError] = useState(null);
 
   // Fetch programs on component mount
   useEffect(() => {
-    fetchPrograms()
-      .then((data) => {
-        if(data == '')
-        {
-        throw new Error('program not found');
+    const fetchData = async()=>{
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchPrograms();
+
+        if (!data || data.length === 0) {
+          setAllPrograms([]);
+        } else {
+          setAllPrograms(data);
         }
-        console.log('data',data)
-        setAllPrograms(data)
-      })
-      .catch((error) => console.error('Error fetching programs OR :', error))
+        
+      } catch (error) {
+        setError('Something went wrong while fetching programs!');
+        console.error('Fetch error:', error);
+      }finally{
+        setLoading(false)
+      }
+    }
+
+    fetchData();
   }, [fetchPrograms])
 
   // Function to add a new program
@@ -178,6 +193,27 @@ const ProgramManagement = () => {
 
       {/* Program List */}
       <div style={{ marginBottom: '32px' }}>
+
+      {loading && (
+        <Grid container justifyContent="center" sx={{ mt: 3 }}>
+          <CircularProgress />
+        </Grid>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <Alert severity="error" sx={{ mt: 3 }}>
+          {error}
+        </Alert>
+      )}
+      
+{/*Empty data */}
+      {!loading && !error && allPrograms.length === 0 && (
+        <Typography variant="h6" color="textSecondary" sx={{ mt: 3 }}>
+          No programs available at the moment.
+        </Typography>
+      )}
+
         {filteredPrograms?.map((program) => (
           <div
             key={program._id}

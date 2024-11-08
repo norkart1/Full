@@ -4,23 +4,7 @@ const path = require("path");
 const fs = require("fs");
 
 module.exports = {
-  // addProgram: async (req, res) => {
-  //   const { value, label } = req.body;
-
-  //   console.log("value", value);
-  //   console.log("label", label);
-
-  //   const newProgram = new Program({ value, label });
-
-  //   try {
-  //     await newProgram.save();
-  //     res.status(201).json(newProgram);
-  //   } catch (error) {
-  //     console.error("Error saving program:", error);
-  //     res.status(500).json({ error: "Internal Server Error" });
-  //   }
-  // },
-
+  
   addProgram: async (req, res) => {
     try {
       const { value, label } = req.body;
@@ -33,7 +17,7 @@ module.exports = {
       });
 
       await newProgram.save();
-      res.status(200).json({
+      res.status(201).json({
         message: "Program created successfully!",
         program: newProgram,
       });

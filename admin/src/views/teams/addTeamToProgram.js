@@ -103,12 +103,11 @@ const AddTeamToProgram = () => {
       teamId: selectedTeam,
       programId: selectedProgram,
       score: parseFloat(score), // Allows both integers and floats
-       
       isSingle,
       isGroup,
     }
 
-    if(!isSingle || !isGroup)
+    if(!isSingle && !isGroup)
     {
       Swal.fire({
         title: 'Error!',
@@ -204,16 +203,6 @@ const AddTeamToProgram = () => {
     setMessage('')
   }
 
-  // useEffect(() => {
-  //   if (!loading && (teams.length === 0 || programs.length === 0)) {
-  //     Swal.fire({
-  //       title: 'Warning!',
-  //       text: 'Cannot find any teams. Please try to add a team or check back later.',
-  //       icon: 'warning',
-  //       confirmButtonText: 'OK',
-  //     });
-  //   }
-  // }, [loading, teams, programs]);
     
 
   return (

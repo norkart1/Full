@@ -58,10 +58,7 @@ const App = () => {
             element={isAuthenticated() ? <DefaultLayout /> : <Navigate to="/login" />}
           />
 
-          {/* <Route
-            path="*"
-            element={ <DefaultLayout/>}
-          /> */}
+           
         </Routes>
       </Suspense>
     </BrowserRouter>
