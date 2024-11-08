@@ -10,8 +10,10 @@ const AddTeamToProgram = () => {
   const[error,setError] = useState(null);
   const [teams, setTeams] = useState([])
   const [programs, setPrograms] = useState([])
+  const [students,setStudents] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState('')
   const [selectedProgram, setSelectedProgram] = useState('')
+  const [selectedStudent,setSelectedStudent] = useState('')
   const [score, setScore] = useState('')
   const [rank, setRank] = useState('')
   
@@ -105,12 +107,75 @@ const AddTeamToProgram = () => {
     }
   };
 
+
+  const fetchStudentsByTeam = async (team) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${teamBaseUrl}/getStudentsByTeam`, {
+        params: { selectedTeam : team},
+      });
+
+      console.log('respnse',response)
+      setStudents(response.data); // Update state with fetched programs
+    } catch (error) {
+      if (error.response) {
+        if (error.response.status === 400) {
+          const errorMessage = error.response.data.message || 'Bad Request';
+          Swal.fire({
+            title: 'Error!',
+            text: errorMessage,
+            icon: 'error',
+            showConfirmButton: false, // Hide the "OK" button
+            timer: 3000, // Auto-close after 3 seconds
+            timerProgressBar: true, // Show a progress bar for the timer
+          });
+          setMessage(errorMessage);
+        } else if (error.response.status === 404) {
+          Swal.fire({
+            title: 'Warning!',
+            text: 'No students found for this team..',
+            icon: 'warning',
+            showConfirmButton: false, // Hide the "OK" button
+            timer: 2000, // Auto-close after 2 seconds
+            timerProgressBar: true, // Show a progress bar for the timer
+          });
+        } else {
+          Swal.fire({
+            title: 'Error!',
+            text: 'There was a problem with your request.',
+            icon: 'error',
+            showConfirmButton: false, // Hide the "OK" button
+            timer: 3000, // Auto-close after 3 seconds
+            timerProgressBar: true, // Show a progress bar for the timer
+          });
+        }
+      } else {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Network or Server error occurred.',
+          icon: 'error',
+          showConfirmButton: false, // Hide the "OK" button
+          timer: 3000, // Auto-close after 3 seconds
+          timerProgressBar: true, // Show a progress bar for the timer
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   
   const handleAgeGroupChange = (e) => {
     const ageGroup = e.target.value;
     setSelectedAgeGroup(ageGroup);
     fetchProgramsByAgeGroup(ageGroup); // Fetch programs when age group changes
   };
+
+  const handleTeamChange = (e)=>{
+    const team = e.target.value;
+    setSelectedTeam(team);
+    fetchStudentsByTeam(team)
+  }
 
   // const fetchPrograms = async () => {
   //   try {
@@ -167,6 +232,7 @@ const AddTeamToProgram = () => {
     const payload = {
       teamId: selectedTeam,
       programId: selectedProgram,
+      studentId:selectedStudent,
       score: parseFloat(score), // Allows both integers and floats
       ageGroup: selectedAgeGroup,
     };
@@ -295,7 +361,7 @@ const AddTeamToProgram = () => {
           <label className="label">Team</label>
           <select
             value={selectedTeam}
-            onChange={(e) => setSelectedTeam(e.target.value)}
+            onChange = {handleTeamChange}
             required
             className="input"
             disabled={loading}
@@ -348,6 +414,30 @@ const AddTeamToProgram = () => {
               programs.map((program) => (
                 <option key={program._id} value={program._id}>
                   {program.value}
+                </option>
+              ))
+            )}
+          </select>
+
+
+
+          <label className="label">Student</label>
+          <select
+            value={selectedStudent}
+            onChange={(e) => setSelectedStudent(e.target.value)}
+            required
+            className="input"
+            disabled={loading || !students.length}
+          >
+            <option value="" disabled>Select a student</option>
+            {loading ? (
+              <option>Loading students...</option>
+            ) : students.length === 0 ? (
+              <option disabled>No Student available</option>
+            ) : (
+              students.map((student) => (
+                <option key={student._id} value={student._id}>
+                  {student.name}
                 </option>
               ))
             )}

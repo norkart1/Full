@@ -51,7 +51,7 @@ module.exports = {
   
   addTeamToProgram: async (req, res) => {
     try {
-      const { teamId, programId, score, ageGroup } = req.body;
+      const { teamId, programId, score, studentId, ageGroup } = req.body;
 
       console.log('add team to prog',req.body)
   
@@ -249,6 +249,37 @@ if (program.type !== ageGroup) {
       res.status(500).json({ message: 'Error fetching programs.' });
     }
   },
+
+
+   getStudentsByTeam : async (req, res) => {
+    try {
+      const { selectedTeam } = req.query; // Extract the team ID from query params
+
+      
+  
+      if (!selectedTeam) {
+        return res.status(400).json({ message: "Team ID is required." });
+      }
+  
+      // Find the team and populate the students field
+      const team = await Teams.findById(selectedTeam).populate('students.studentId', 'name');
+  
+      if (!team) {
+        return res.status(404).json({ message: "Team not found." });
+      }
+  
+      if (!team.students.length) {
+        return res.status(404).json({ message: "No students found for this team." });
+      }
+  
+      // Return the list of students
+      res.status(200).json(team.students.map(s => s.studentId));
+    } catch (error) {
+      console.error("Error fetching students for team:", error);
+      res.status(500).json({ message: "Internal server error." });
+    }
+  },
+  
 
   getTeamProgramDetail: async (req, res) => {
     const { teamId, programId } = req.query; // Get teamId and programId from the query params

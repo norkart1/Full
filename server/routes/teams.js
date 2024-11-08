@@ -17,13 +17,15 @@ const {
   deleteTeamFromProgram,
   getTeamProgramDetail,
   getProgramByAge,
+  getStudentsByTeam
 } = require("../Controller/program");
 const Review = require("../Model/review");
+const { addStudent, getStudentById, updateStudent, deleteStudentById, getStudents } = require("../Controller/student");
 
 // Define storage for the images
-const categoryStorage = multer.diskStorage({
+const studentStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const mainProductPath = path.join(__dirname, "../public", "programImg");
+    const mainProductPath = path.join(__dirname, "../public", "students");
 
     if (!fs.existsSync(mainProductPath)) {
       console.log("Directory does not exist, creating...");
@@ -31,22 +33,19 @@ const categoryStorage = multer.diskStorage({
     }
 
     if (file.fieldname.startsWith("image")) {
-      console.log("Setting destination to programImg folder");
       cb(null, mainProductPath);
     } else {
-      console.log("Invalid fieldname");
       cb(new Error("Invalid fieldname"), null);
     }
   },
 
   filename: function (req, file, cb) {
-    console.log("Generating filename for file:", file);
     cb(null, file.originalname, path.extname(file.originalname)); // Append the file extension
   },
 });
 
-const categoryUpload = multer({
-  storage: categoryStorage,
+const studentUpload = multer({
+  storage: studentStorage,
   limits: { fileSize: 1024 * 1024 * 2 }, // Limit file size to 2MB
 });
 
@@ -173,6 +172,7 @@ router.post("/submitReview", async (req, res) => {
 
 router.get("/getAllPrograms", getAllPrograms);
 router.get('/getProgramsByAge',getProgramByAge);
+router.get('/getStudentsByTeam',getStudentsByTeam);
 router.delete("/deleteProgramById/:id", deleteProgram);
 router.put("/updateProgram/:id", updateProgramById);
 router.post("/createProgram", addProgram);
@@ -195,5 +195,13 @@ router.get("/getTeamsByProgram/:id", async (req, res) => {
       .json({ message: "Failed to fetch teams", error: error.message });
   }
 });
+
+
+//related to students;
+router.post("/addStudent",studentUpload.single('image'), addStudent);
+router.get("/getStudentById/:id", getStudentById);
+router.get("/getAllStudents", getStudents);
+router.put("/updateStudentById/:id", updateStudent);
+router.delete("/deleteStudentById/:id", deleteStudentById);
 
 module.exports = router;
