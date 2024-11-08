@@ -9,7 +9,7 @@ export const ProgramCrudProvider = ({ children }) => {
 
   // Create a new program
   const createProgram = async (programData) => {
-    console.log('cre', programData);
+    
     try {
       const response = await axios.post(`${teamBaseUrl}/createProgram`, programData, {
         headers: { 'Content-Type': 'application/json' },

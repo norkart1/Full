@@ -12,6 +12,7 @@ const addTeam = async (name, image) => {
       name,
       image,
       programs: [], // Empty program array initially
+      students:[],
     });
 
     await newTeam.save();
@@ -20,17 +21,7 @@ const addTeam = async (name, image) => {
     throw error;
   }
 };
-
-// const getAllTeams = async () => {
-//   try {
-//     // Fetch all Teams from the database
-//     const allTeams = await Teams.find();
-
-//     return allTeams;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+ 
 
 const getAllTeams = async () => {
   try {
@@ -47,7 +38,7 @@ const getTeamById = async (id) => {
     // Find team by ID in the database and populate programs field with details from the Program model
     const team = await Teams.findById(id).populate({
       path: "programs.programId", // Populate programId inside the programs array
-      select: "label value", // Select specific fields from the Program model
+      path: "students.studentId", // Populate programId inside the programs array
     });
 
     if (!team) {

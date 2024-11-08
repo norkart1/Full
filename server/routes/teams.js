@@ -5,18 +5,19 @@ const multer = require("multer");
 const path = require("node:path");
 const fs = require("fs");
 
-const teamController = require("../Controller/teamsCrud");
+const teamController = require("../Controller/teams");
 const upload = require("../Middlewares/multer");
 const {
   getAllPrograms,
   addProgram,
-  deleteProgramById,
+  deleteProgram,
   updateProgramById,
   addTeamToProgram,
   editTeamInProgram,
   deleteTeamFromProgram,
   getTeamProgramDetail,
-} = require("../Controller/programCrud");
+  getProgramByAge,
+} = require("../Controller/program");
 const Review = require("../Model/review");
 
 // Define storage for the images
@@ -171,7 +172,8 @@ router.post("/submitReview", async (req, res) => {
 //program rotues
 
 router.get("/getAllPrograms", getAllPrograms);
-router.delete("/deleteProgramById/:id", deleteProgramById);
+router.get('/getProgramsByAge',getProgramByAge);
+router.delete("/deleteProgramById/:id", deleteProgram);
 router.put("/updateProgram/:id", updateProgramById);
 router.post("/createProgram", addProgram);
 

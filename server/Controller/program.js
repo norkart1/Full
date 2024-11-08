@@ -6,21 +6,41 @@ const fs = require("fs");
 module.exports = {
   
   addProgram: async (req, res) => {
-    const { value, label } = req.body;
+    const { value, isSingle, isGroup, gender, type } = req.body;
+
+    console.log('values from client',req.body)
+  
+    // Validate the required fields
+    if (!value || !gender || !type) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+  
+    // Validate gender and type to ensure they match the schema enums
+    const validGenders = ['Girl', 'Boy'];
+    const validTypes = ['Kids', 'Sub-Junior', 'Junior', 'Senior', 'Super Senior','General'];
+  
+    if (!validGenders.includes(gender)) {
+      return res.status(400).json({ message: 'Invalid gender specified.' });
+    }
+  
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ message: 'Invalid program type specified.' });
+    }
   
     try {
-      // Case-insensitive check if the program already exists
-      const existingProgram = await Program.findOne({ 
-        value: { $regex: new RegExp(`^${value}$`, 'i') } 
+      // Check if the program already exists (case-insensitive)
+      const existingProgram = await Program.findOne({
+        value: { $regex: new RegExp(`^${value}$`, 'i') },
       });
   
       if (existingProgram) {
         return res.status(400).json({ message: 'Program already exists.' });
       }
   
-      // Create new program
-      const newProgram = new Program({ value, label });
+      // Create the new program with validated fields
+      const newProgram = new Program({ value, isSingle, isGroup, gender, type });
       await newProgram.save();
+  
       return res.status(201).json(newProgram);
     } catch (error) {
       console.error('Error creating program:', error);
@@ -28,17 +48,28 @@ module.exports = {
     }
   },
   
+  
   addTeamToProgram: async (req, res) => {
     try {
-      const { teamId, programId, score, isSingle, isGroup } = req.body;
+      const { teamId, programId, score, ageGroup } = req.body;
+
+      console.log('add team to prog',req.body)
   
       // Find team and program by their IDs
       const team = await Teams.findById(teamId);
       const program = await Program.findById(programId);
-  
+
+      
       if (!team || !program) {
         return res.status(404).json({ message: "Team or Program not found." });
       }
+
+      // Ensure the program type matches the age group
+      if (program.type !== ageGroup) {
+        return res.status(400).json({
+        message: `Program does not belong to the selected age group (${ageGroup}).`,
+        });
+     }
   
       // Check if the team already participated in the program
       const existingParticipation = team.programs.find(
@@ -51,36 +82,21 @@ module.exports = {
           .json({ message: "Team has already participated in this program." });
       }
   
-      // Calculate the rank based on the existing teams in the program
-      const allTeamsInProgram = [...program.teams, { teamId, score }];
-      allTeamsInProgram.sort((a, b) => b.score - a.score); // Sort by score descending
-  
-      // Determine the rank of the current team
-      const newRank = allTeamsInProgram.findIndex(
-        (t) => t.teamId.toString() === teamId
-      ) + 1;
-  
-      // Add the team to the program with the calculated rank
-      team.programs.push({ programId, score, rank: newRank, isSingle, isGroup });
-      program.teams.push({ teamId, score, rank: newRank, isSingle, isGroup });
-  
-      // Update the total score of the team
-      team.totalScore += score;
-  
-      // Update ranks for all teams in the program
-      for (let rank = 0; rank < allTeamsInProgram.length; rank++) {
-        const teamInProgram = allTeamsInProgram[rank];
-        const programTeam = program.teams.find(
-          (t) => t.teamId.toString() === teamInProgram.teamId.toString()
-        );
-        if (programTeam) {
-          programTeam.rank = rank + 1;
-        }
-      }
-  
-      // Save the team and program
-      await team.save();
-      await program.save();
+      // Replace 'program.teams' with 'program.participants'
+const allTeamsInProgram = [...program.participants, { teamId, score }];
+allTeamsInProgram.sort((a, b) => b.score - a.score);
+
+const newRank = allTeamsInProgram.findIndex(
+  (t) => t.teamId.toString() === teamId
+) + 1;
+
+// Add new participant to team and program
+team.programs.push({ programId, score, rank: newRank });
+program.participants.push({ teamId, score, rank: newRank });
+
+await team.save();
+await program.save();
+
   
       res.status(200).json({ message: "Team added to program successfully!" });
     } catch (error) {
@@ -93,7 +109,7 @@ module.exports = {
 
   editTeamInProgram: async (req, res) => {
     try {
-      const { teamId, programId, score, isSingle, isGroup } = req.body;
+      const { teamId, programId, score, ageGroup } = req.body;
   
       // Find the team and program by their IDs
       const team = await Teams.findById(teamId);
@@ -102,6 +118,15 @@ module.exports = {
       if (!team || !program) {
         return res.status(404).json({ message: "Team or Program not found." });
       }
+
+      
+
+if (program.type !== ageGroup) {
+  return res.status(400).json({
+    message: `Program does not belong to the selected age group (${ageGroup}).`,
+  });
+}
+
   
       // Check if the team has already participated in the program
       const teamParticipation = team.programs.find(
@@ -207,6 +232,24 @@ module.exports = {
     }
   },
 
+  getProgramByAge:async(req,res)=>{
+    try {
+      const { ageGroup } = req.query;
+  
+      // Fetch programs where type matches the selected age group
+      const programs = await Program.find({ type: ageGroup });
+  
+      if (!programs || programs.length === 0) {
+        return res.status(404).json({ message: 'No programs found for the selected age group.' });
+      }
+  
+      res.status(200).json(programs);
+    } catch (error) {
+      console.error('Error fetching programs by age group:', error);
+      res.status(500).json({ message: 'Error fetching programs.' });
+    }
+  },
+
   getTeamProgramDetail: async (req, res) => {
     const { teamId, programId } = req.query; // Get teamId and programId from the query params
   
@@ -245,34 +288,24 @@ module.exports = {
     }
   },
 
-  deleteProgramById: async (req, res) => {
+  deleteProgram: async (req, res) => {
+    const { id } = req.params;
+  
     try {
-      const program = await Program.findById(req.params.id);
-      if (!program) {
-        return res.status(404).json({ message: "program not found" });
+      // Find and delete the program
+      const deletedProgram = await Program.findByIdAndDelete(id);
+  
+      if (!deletedProgram) {
+        return res.status(404).json({ message: 'Program not found.' });
       }
-
-      const imageUrl = program.image;
-
-      // Delete the image file from the folder
-      if (imageUrl) {
-        const imagePath = path.join(
-          __dirname,
-          "../public/programImg",
-          imageUrl
-        );
-
-        fs.unlinkSync(imagePath);
-      }
-
-      await program.deleteOne();
-
-      res.status(200).json({ message: "program deleted successfully" });
+  
+      return res.status(200).json({ message: 'Program deleted successfully.' });
     } catch (error) {
-      console.error("Error deleting program:", error);
-      res.status(500).json({ message: error.message });
+      console.error('Error deleting program:', error);
+      return res.status(500).json({ message: 'Internal Server Error' });
     }
   },
+  
 
   updateProgramById: async (req, res) => {
     const { value, label } = req.body;

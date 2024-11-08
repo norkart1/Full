@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const teamSchema = new mongoose.Schema({
   name: { type: String, required: true },
   image: { type: String, required: true },
-  
   createdAt: { type: Date, default: Date.now },
   programs: [
     {
@@ -18,6 +17,16 @@ const teamSchema = new mongoose.Schema({
       rank: { type: Number, default: 0 },
       isSingle: { type: Boolean, default: false },
       isGroup: { type: Boolean, default: false },
+    },
+  ],
+
+  students: [
+    {
+      studentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student", // Reference to the Student model
+        required: true,
+      },
     },
   ],
   totalScore: { type: Number, default: 0 },
