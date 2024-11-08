@@ -6,27 +6,28 @@ const fs = require("fs");
 module.exports = {
   
   addProgram: async (req, res) => {
+    const { value, label } = req.body;
+  
     try {
-      const { value, label } = req.body;
-
-      // Create a new program
-      const newProgram = new Program({
-        value,
-        label,
-        teams: [], // Empty teams initially
+      // Case-insensitive check if the program already exists
+      const existingProgram = await Program.findOne({ 
+        value: { $regex: new RegExp(`^${value}$`, 'i') } 
       });
-
+  
+      if (existingProgram) {
+        return res.status(400).json({ message: 'Program already exists.' });
+      }
+  
+      // Create new program
+      const newProgram = new Program({ value, label });
       await newProgram.save();
-      res.status(201).json({
-        message: "Program created successfully!",
-        program: newProgram,
-      });
+      return res.status(201).json(newProgram);
     } catch (error) {
-      console.error("Error creating program:", error);
-      res.status(500).json({ message: "Error creating program." });
+      console.error('Error creating program:', error);
+      return res.status(500).json({ message: 'Internal Server Error' });
     }
   },
-
+  
   addTeamToProgram: async (req, res) => {
     try {
       const { teamId, programId, score, isSingle, isGroup } = req.body;

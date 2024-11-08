@@ -9,22 +9,25 @@ export const ProgramCrudProvider = ({ children }) => {
 
   // Create a new program
   const createProgram = async (programData) => {
-    console.log('cre',programData)
+    console.log('cre', programData);
     try {
       const response = await axios.post(`${teamBaseUrl}/createProgram`, programData, {
         headers: { 'Content-Type': 'application/json' },
-      })
-
+      });
+  
       if (response.status === 201) {
-        const newProgram = response.data
-        setPrograms((prevPrograms) => [...prevPrograms, newProgram])
+        const newProgram = response.data;
+        return newProgram;
       } else {
-        throw new Error('Failed to add new program')
+        throw new Error('Failed to add new program');
       }
     } catch (error) {
-      console.error('Error adding program:', error)
+      console.error('Error adding program:', error);
+      // Propagate the error to be handled by addProgram
+      throw error;
     }
-  }
+  };
+  
 
   // Fetch all programs
   const fetchPrograms = async () => {
@@ -44,11 +47,11 @@ export const ProgramCrudProvider = ({ children }) => {
       const response = await axios.put(`${teamBaseUrl}/programs/update/${programId}`, updatedData)
       if (response.status === 200) {
         const updatedProgram = response.data
-        setPrograms((prevPrograms) =>
-          prevPrograms.map((program) =>
-            program._id === updatedProgram._id ? updatedProgram : program,
-          ),
-        )
+        // setPrograms((prevPrograms) =>
+        //   prevPrograms.map((program) =>
+        //     program._id === updatedProgram._id ? updatedProgram : program,
+        //   ),
+        // )
       } else {
         throw new Error('Failed to update program')
       }
@@ -62,7 +65,8 @@ export const ProgramCrudProvider = ({ children }) => {
     try {
       const response = await axios.delete(`${teamBaseUrl}/deleteProgramById/${programId}`)
       if (response.status === 200) {
-        setPrograms((prevPrograms) => prevPrograms.filter((program) => program._id !== programId))
+        return response.status;
+       // setPrograms((prevPrograms) => prevPrograms.filter((program) => program._id !== programId))
       } else {
         throw new Error('Failed to delete program')
       }

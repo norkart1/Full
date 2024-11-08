@@ -96,8 +96,8 @@ const AddTeamToProgram = () => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-
+    e.preventDefault();
+  
     // Construct the request payload
     const payload = {
       teamId: selectedTeam,
@@ -105,56 +105,85 @@ const AddTeamToProgram = () => {
       score: parseFloat(score), // Allows both integers and floats
       isSingle,
       isGroup,
-    }
-
-    if(!isSingle && !isGroup)
-    {
+    };
+  
+    if (!isSingle && !isGroup) {
       Swal.fire({
         title: 'Error!',
         text: 'Please confirm single or group.',
         icon: 'error',
         confirmButtonText: 'OK',
-      })
-      return
+      });
+      return;
     }
-
+  
     try {
+      let response;
+  
       if (isEditMode) {
         // Edit mode - update existing entry
-        const response = await axios.put(`${teamBaseUrl}/editTeamInProgram`, payload)
-
+        response = await axios.put(`${teamBaseUrl}/editTeamInProgram`, payload);
         Swal.fire({
           title: 'Success!',
           text: 'Team details updated successfully!',
           icon: 'success',
           confirmButtonText: 'OK',
-        })
+        });
       } else {
         // Add mode - create new entry
-        const response = await axios.post(`${teamBaseUrl}/addTeamToProgram`, payload)
-
+        response = await axios.post(`${teamBaseUrl}/addTeamToProgram`, payload);
         Swal.fire({
           title: 'Success!',
           text: 'Team added to program successfully!',
           icon: 'success',
           confirmButtonText: 'OK',
-        })
-        setMessage(response.data.message)
+        });
       }
-
-      resetForm() // Reset the form after submitting
+  
+      setMessage(response.data.message);
+      resetForm(); // Reset the form after submitting
     } catch (error) {
-      console.error('Error handling team in program:', error)
-      setMessage('Error handling team in program.')
-
-      Swal.fire({
-        title: 'Error!',
-        text: 'There was a problem with your request.',
-        icon: 'error',
-        confirmButtonText: 'OK',
-      })
+      console.error('Error handling team in program:', error);
+  
+      // Handle specific errors based on response status
+      if (error.response) {
+        if (error.response.status === 400) {
+          const errorMessage = error.response.data.message || 'Bad Request';
+          Swal.fire({
+            title: 'Error!',
+            text: errorMessage,
+            icon: 'error',
+            confirmButtonText: 'OK',
+          });
+          setMessage(errorMessage);
+        } else if (error.response.status === 404) {
+          Swal.fire({
+            title: 'Error!',
+            text: 'Team or Program not found.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+          });
+        } else {
+          Swal.fire({
+            title: 'Error!',
+            text: 'There was a problem with your request.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+          });
+        }
+      } else {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Network or Server error occurred.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      }
+  
+      setMessage('Error handling team in program.');
     }
-  }
+  };
+  
 
   const handleDelete = async () => {
     if (selectedTeam === '' || selectedProgram === '') {

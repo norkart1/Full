@@ -1,70 +1,74 @@
-import React, { useState, useContext, useEffect } from 'react'
-import { CrudProgramContext } from '../../Context/programContext'
-import Snackbar from '@mui/material/Snackbar'
-import Alert from '@mui/material/Alert'
-import CircularProgress from '@mui/material/CircularProgress'
+import React, { useContext, useEffect, useState } from 'react';
+import { Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Snackbar, Alert, Pagination,Box ,TextField} from '@mui/material';
+import { CrudProgramContext } from '../../Context/programContext';
 import Swal from 'sweetalert2'
-import Typography from '@mui/material/Typography'
+
 
 const ProgramManagement = () => {
-  const { createProgram, fetchPrograms, deleteProgramById } = useContext(CrudProgramContext)
+  const { fetchPrograms, createProgram, deleteProgramById } = useContext(CrudProgramContext);
+  const [newProgram, setNewProgram] = useState("");
+  const [programs, setPrograms] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredPrograms, setFilteredPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const [newProgram, setNewProgram] = useState('') // State for new program input
-  const [searchTerm, setSearchTerm] = useState('') // State for search term
-  const [allPrograms, setAllPrograms] = useState([]) // State for storing all fetched programs
-  const [openSnackbar, setOpenSnackbar] = useState(false) // Snackbar state
-  const [alertMessage, setAlertMessage] = useState('') // Snackbar alert message
-  const [loading,setLoading] = useState(true);
-  const [error,setError] = useState(null);
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const programsPerPage = 5;
 
-  // Fetch programs on component mount
   useEffect(() => {
-    const fetchData = async()=>{
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchPrograms();
-
-        if (!data || data.length === 0) {
-          setAllPrograms([]);
-        } else {
-          setAllPrograms(data);
-        }
-        
-      } catch (error) {
-        setError('Something went wrong while fetching programs!');
-        console.error('Fetch error:', error);
-      }finally{
-        setLoading(false)
-      }
-    }
-
-    fetchData();
-  }, [fetchPrograms])
-
-  // Function to add a new program
-  const addProgram = () => {
-    if (!newProgram) {
-      setAlertMessage('Please enter a program name.')
-      setOpenSnackbar(true)
-      return
-    }
-
-    createProgram({ value: newProgram, label: newProgram }) // Call createProgram from context
-      .then(() => {
-        setNewProgram('') // Reset input field
-        setAlertMessage('Program added successfully!')
-        setOpenSnackbar(true)
-        
+    fetchPrograms()
+      .then((data) => {
+        setPrograms(data);
+        setFilteredPrograms(data);
+        setLoading(false);
       })
       .catch((error) => {
-        console.error('Error adding program:', error)
-        setAlertMessage('Failed to add program.')
-        setOpenSnackbar(true)
-      })
-  }
+        setError("Something went wrong!");
+        setOpenSnackbar(true);
+        setLoading(false);
+      });
+  }, [fetchPrograms]);
 
-  // Function to delete a program
+  useEffect(() => {
+    const filtered = programs.filter((program) =>
+      program?.value.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredPrograms(filtered);
+  }, [searchTerm, programs]);
+
+  const addProgram = () => {
+    if (!newProgram.trim()) {
+      setAlertMessage('Please enter a program name.');
+      setOpenSnackbar(true);
+      return;
+    }
+  
+    createProgram({ value: newProgram, label: newProgram })
+      .then((newlyCreatedProgram) => {
+        
+        setPrograms((prev) => [...prev, newlyCreatedProgram]);
+        setFilteredPrograms((prev) => [...prev, newlyCreatedProgram]);
+        setNewProgram('');
+        setAlertMessage('Program added successfully!');
+        setOpenSnackbar(true);
+      })
+      .catch((error) => {
+        
+        if (error.response && error.response.status === 400) {
+          setAlertMessage('Program already exists.');
+        } else {
+          setAlertMessage('Failed to add program.');
+        }
+  
+        setOpenSnackbar(true);
+      });
+  };
+  
+  
   const handleDeleteProgram = (programId) => {
     Swal.fire({
       title: "Are you sure?",
@@ -73,203 +77,121 @@ const ProgramManagement = () => {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!"
+      confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
         deleteProgramById(programId)
-      .then(() => {
-        setAlertMessage('Program deleted successfully!')
-        setOpenSnackbar(true)
-      })
-      .catch((error) => {
-        console.error('Error deleting program:', error)
-        setAlertMessage('Failed to delete program.')
-        setOpenSnackbar(true)
-      })
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success"
-        });
+          .then((status) => {
+            if(status === 200)
+            {setPrograms((prev) => prev.filter((program) => program._id !== programId));
+              setFilteredPrograms((prev) =>
+                prev.filter((program) => program._id !== programId)
+              );
+              setOpenSnackbar(true);
+              Swal.fire("Deleted!", "Your program has been deleted.", "success");}
+          })
+          .catch((error) => {
+            console.error("Error deleting program:", error);
+            setAlertMessage("Failed to delete program.");
+            setOpenSnackbar(true);
+          });
       }
     });
-    
-  }
+  };
 
-  // Filter programs based on search term
-  const filteredPrograms = allPrograms.filter((program) =>
-    program.label.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const indexOfLastProgram = currentPage * programsPerPage;
+  const indexOfFirstProgram = indexOfLastProgram - programsPerPage;
+  const currentPrograms = filteredPrograms?.slice(indexOfFirstProgram, indexOfLastProgram);
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
 
   return (
-    <div
-      style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '24px',
-        backgroundColor: '#fff',
-        borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-      }}
-    >
-      <h1
-        style={{
-          fontSize: '32px',
-          fontWeight: 'bold',
-          color: '#333',
-          marginBottom: '24px',
-        }}
-      >
+    <Container sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
         Program Management
-      </h1>
+      </Typography>
+
+      {/* Add Program Form */}
+      <Box display="flex" gap={2} mb={3}>
+        <TextField
+          value={newProgram}
+          onChange={(e) => setNewProgram(e.target.value)}
+          label="New Program"
+          variant="outlined"
+          fullWidth
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={addProgram}
+          disabled={loading}
+        >
+          Add Program
+        </Button>
+      </Box>
 
       {/* Search Bar */}
-      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', width: '50%' }}>
-        <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
-          <input
-            type="text"
-            value={searchTerm}
-            style={{
-              width: '100%',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: '1px solid #ccc',
-              outline: 'none',
-              fontSize: '16px',
-            }}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search programs"
-          />
-        </div>
-      </div>
+      <TextField
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        label="Search Programs"
+        variant="outlined"
+        fullWidth
+        sx={{ mb: 2 }}
+      />
 
       {/* Snackbar for alerts */}
-      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)}>
-        <Alert onClose={() => setOpenSnackbar(false)} severity="warning" sx={{ width: '100%' }}>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setOpenSnackbar(false)}
+      >
+        <Alert onClose={() => setOpenSnackbar(false)} severity="info" sx={{ width: "100%" }}>
           {alertMessage}
         </Alert>
       </Snackbar>
 
-      {/* Add New Program Form */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <input
-            name="program"
-            type="text"
-            value={newProgram}
-            onChange={(e) => setNewProgram(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              border: '1px solid #ccc',
-              outline: 'none',
-              fontSize: '16px',
-            }}
-            placeholder="New program"
-          />
-        </div>
+      {/* Program Table */}
+      <TableContainer component={Paper} sx={{ mb: 4 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: "bold" }}>Program Name</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {currentPrograms.map((program) => (
+              <TableRow key={program._id}>
+                <TableCell>{program.value}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() => handleDeleteProgram(program._id)}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-        <button
-          onClick={addProgram}
-          style={{
-            fontSize: '16px',
-            fontWeight: '500',
-            padding: '12px 16px',
-            width: '100%',
-            backgroundColor: '#007bff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s ease',
-          }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = '#0056b3')}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = '#007bff')}
-        >
-          Add Program
-        </button>
-      </div>
+      {/* Pagination */}
+      <Pagination
+        count={Math.ceil(filteredPrograms.length / programsPerPage)}
+        page={currentPage}
+        onChange={handlePageChange}
+        color="primary"
+        sx={{ display: "flex", justifyContent: "center" }}
+      />
+    </Container>
+  );
+};
 
-      {/* Program List */}
-      <div style={{ marginBottom: '32px' }}>
 
-      {loading && (
-        <Grid container justifyContent="center" sx={{ mt: 3 }}>
-          <CircularProgress />
-        </Grid>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <Alert severity="error" sx={{ mt: 3 }}>
-          {error}
-        </Alert>
-      )}
-      
-{/*Empty data */}
-      {!loading && !error && allPrograms.length === 0 && (
-        <Typography variant="h6" color="textSecondary" sx={{ mt: 3 }}>
-          No programs available at the moment.
-        </Typography>
-      )}
-
-        {filteredPrograms?.map((program) => (
-          <div
-            key={program._id}
-            style={{
-              backgroundColor: '#fff',
-              padding: '24px',
-              borderRadius: '8px',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              marginBottom: '32px',
-              transition: 'box-shadow 0.3s ease',
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)')
-            }
-            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)')}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '16px',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#333',
-                }}
-              >
-                {program.label}
-              </span>
-
-              <button
-                onClick={() => handleDeleteProgram(program._id)}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#dc3545',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s ease',
-                }}
-                onMouseEnter={(e) => (e.target.style.backgroundColor = '#c82333')}
-                onMouseLeave={(e) => (e.target.style.backgroundColor = '#dc3545')}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-export default ProgramManagement
+export default ProgramManagement;
